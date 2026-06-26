@@ -214,15 +214,28 @@ export async function POST(req: NextRequest) {
         let keepLooping = true;
         while (keepLooping) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const response = await (client.chat.completions.create as any)({
-            model: selectedModel,
-            messages,
-            tools: FINANCIAL_TOOLS,
-            stream: true,
-            stream_options: { include_usage: true },
-            reasoning_effort: effort,
-            extra_body: { thinking: { type: effort === "low" ? "disabled" : "enabled" } },
-          });
+          let response: any;
+          try {
+            const controller2 = new AbortController();
+            const timeout = setTimeout(() => controller2.abort(), 120000);
+            response = await (client.chat.completions.create as any)({
+              model: selectedModel,
+              messages,
+              tools: FINANCIAL_TOOLS,
+              stream: true,
+              stream_options: { include_usage: true },
+              reasoning_effort: effort,
+              extra_body: { thinking: { type: effort === "low" ? "disabled" : "enabled" } },
+            }, { signal: controller2.signal });
+            clearTimeout(timeout);
+          } catch (apiError) {
+            console.error("API call failed:", apiError);
+            const errMsg = apiError instanceof Error ? apiError.message : "API call failed";
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "content", text: `\n\nError: ${errMsg}` })}\n\n`)
+            );
+            break;
+          }
 
           let fullContent = "";
           let fullThinking = "";
@@ -335,7 +348,7 @@ export async function POST(req: NextRequest) {
             }
             messages.push({
               role: "assistant" as const,
-              content: null as unknown as string,
+              content: "",
               tool_calls: toolCalls.map((tc) => ({
                 id: tc.id,
                 type: "function" as const,
@@ -426,12 +439,14 @@ Return ONLY valid JSON, nothing else.`,
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({ type: "error", error: errorMessage })}\n\n`
-          )
-        );
-        controller.close();
+        try {
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "error", error: errorMessage })}\n\n`
+            )
+          );
+        } catch { /* controller may already be closed */ }
+        try { controller.close(); } catch { /* already closed */ }
       }
     },
   });
