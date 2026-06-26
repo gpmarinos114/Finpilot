@@ -218,21 +218,15 @@ export async function POST(req: NextRequest) {
           try {
             const controller2 = new AbortController();
             const timeout = setTimeout(() => controller2.abort(), 120000);
-            const requestParams: Record<string, unknown> = {
+            response = await (client.chat.completions.create as any)({
               model: selectedModel,
               messages,
               tools: FINANCIAL_TOOLS,
               stream: true,
               stream_options: { include_usage: true },
-            };
-            if (providerName === "deepseek") {
-              requestParams.reasoning_effort = effort;
-              requestParams.extra_body = { thinking: { type: effort === "low" ? "disabled" : "enabled" } };
-            }
-            response = await (client.chat.completions.create as any)(
-              requestParams,
-              { signal: controller2.signal }
-            );
+              reasoning_effort: effort,
+              extra_body: { thinking: { type: effort === "low" ? "disabled" : "enabled" } },
+            }, { signal: controller2.signal });
             clearTimeout(timeout);
           } catch (apiError) {
             console.error("API call failed:", apiError);
