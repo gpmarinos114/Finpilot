@@ -1,5 +1,43 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# FinPilot - Agent Guidelines
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+## Project Overview
+AI-powered financial planner with persistent memory, historical snapshots, and multi-device sync.
+Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Prisma/SQLite.
+
+## Code Conventions
+
+### Styling
+- **Tailwind CSS only** — no CSS modules, no styled-components, no component libraries
+- **Dark theme** — hardcoded gray-800/900/950 backgrounds, white/gray-400 text, blue-600 accents
+- All components are `"use client"` — no server components beyond the layout
+
+### Database
+- **Always use `getDb()`** (async) from `src/lib/db.ts` — never import `prisma` directly in new code
+- `getDb()` returns a PrismaClient that supports both local SQLite and Turso cloud
+- DB backend is configured via `db-config.json` (gitignored)
+
+### API Routes
+- Each route handler must call `const prisma = await getDb()` at the top
+- Pattern: GET (list), POST (create), PUT (update), DELETE (delete via `?id=`)
+- Financial mutations trigger auto-snapshots via `refreshAndSnapshot` in Dashboard
+
+### Components
+- Financial cards use inline table editing pattern (not separate forms)
+- CollapsibleCard wrapper provides collapse/expand behavior
+- Memory files are stored in DB (MemoryFile model), not filesystem
+
+### Known Lint Issues (pre-existing, do not "fix")
+- `react-hooks/set-state-in-effect` — `useEffect` calling `fetchAll()` is intentional data-fetching
+- `react-hooks/exhaustive-deps` — `[]` deps on mount-only effects is intentional
+- `prefer-const` on `toolCalls` in chat route — pre-existing
+
+## Key Architecture Decisions
+- Memory files in DB, not filesystem — enables cross-device sync
+- Snapshots auto-capture daily (dedup) — no manual trigger needed
+- `db-config.json` for Turso credentials (not in DB) — avoids chicken-and-egg problem
+- Settings stored in both DB (API keys) and file (DB config)
+
+## Before Committing
+- Run `npx tsc --noEmit` — must pass with no errors in `src/`
+- Run `npx eslint src/` — no new errors (pre-existing warnings are OK)
+- Never commit: `dev.db`, `db-config.json`, `.env*`, `memory/plans/`, `memory/simulations/`
