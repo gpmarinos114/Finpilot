@@ -127,7 +127,9 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
   const [showCommands, setShowCommands] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [filteredCommands, setFilteredCommands] = useState(SLASH_COMMANDS);
+  const [attachments, setAttachments] = useState<{ name: string; content: string }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -312,6 +314,22 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
     }
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newAttachments: { name: string; content: string }[] = [];
+    for (const file of Array.from(files)) {
+      const text = await file.text();
+      newAttachments.push({ name: file.name, content: text });
+    }
+    setAttachments((prev) => [...prev, ...newAttachments]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
@@ -323,14 +341,16 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
 
     const userMessage = input.trim();
     setInput("");
-    addMessage({ role: "user", content: userMessage });
+    const currentAttachments = [...attachments];
+    setAttachments([]);
+    addMessage({ role: "user", content: userMessage + (currentAttachments.length > 0 ? `\n\n📎 ${currentAttachments.map((a) => a.name).join(", ")}` : "") });
     setLoading(true);
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, provider, model, sessionId, reasoning_effort: reasoningEffort }),
+        body: JSON.stringify({ message: userMessage, provider, model, sessionId, reasoning_effort: reasoningEffort, attachments: currentAttachments }),
       });
 
       if (!res.ok) {
@@ -556,7 +576,32 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
             ))}
           </div>
         )}
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {attachments.map((a, i) => (
+              <span key={i} className="inline-flex items-center gap-1 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300">
+                📎 {a.name}
+                <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-red-400 ml-0.5">&times;</button>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+            multiple
+            accept=".csv,.txt,.json,.md,.tsv,.xlsx,.xls,.pdf"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-2 rounded text-sm"
+            title="Attach file"
+          >
+            📎
+          </button>
           <input
             value={input}
             onChange={(e) => handleInputChange(e.target.value)}
@@ -567,7 +612,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
           />
           <button
             onClick={sendMessage}
-            disabled={loading || !input.trim()}
+            disabled={loading || (!input.trim() && attachments.length === 0)}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded text-sm"
           >
             Send

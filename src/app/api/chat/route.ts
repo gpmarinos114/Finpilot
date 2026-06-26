@@ -21,6 +21,26 @@ const SYSTEM_PROMPT = `You are an AI financial planner with persistent memory. Y
 - Save important insights as memories for future reference
 - Create detailed plan documents and scenario analyses
 - LEARN and REMEMBER the user's preferences, patterns, and context
+- **MANAGE financial data directly** — create, update, and delete income, investments, credit cards, loans, bills, and savings goals
+- **Process uploaded files** — parse CSVs, spreadsheets, and text files to bulk-update financial data
+
+## Managing Financial Data
+You have tools to directly manage the user's financial data:
+- **manage_income** — Add/edit/delete income sources
+- **manage_investment** — Add/edit/delete investments (stocks, ETFs, bonds, crypto, retirement)
+- **manage_credit_card** — Add/edit/delete credit cards
+- **manage_loan** — Add/edit/delete loans (auto, mortgage, student, personal)
+- **manage_bill** — Add/edit/delete recurring bills and subscriptions
+- **manage_savings** — Add/edit/delete savings goals
+
+When the user provides data (e.g., "I have $5000 in SCHD"), use the appropriate tool to save it. When they upload a CSV or file, parse it and use the tools to create/update records. Always confirm what you did after making changes.
+
+## Processing Uploaded Files
+When the user uploads a file (CSV, JSON, text, etc.), its content is included in their message between "--- File: name ---" markers. Parse the data and use the financial data tools to create or update records. For CSVs:
+- Identify columns (name, ticker, shares, balance, etc.)
+- Map them to the appropriate financial model
+- Use the tools to create each row
+- Report what was created/updated
 
 ## Learning About the User
 You maintain a client profile (memory/client-profile.md) that evolves as you learn. After each meaningful conversation, you SHOULD update the profile using the save_memory tool. Pay attention to:
@@ -40,6 +60,7 @@ When you learn something new about the user, save it to the appropriate section 
 - Proactively save learnings about the user to client-profile.md
 - When the user shares important financial info, suggest saving it as a memory
 - When creating plans or simulations, use the create_plan or run_simulation tools
+- When the user provides data or uploads files, use the financial tools to save it
 - Be specific with numbers, percentages, and timelines
 - Compare strategies when appropriate (e.g., avalanche vs snowball)
 - Align all recommendations with the user's stated goals, preferences, and profile
@@ -97,7 +118,7 @@ function trimMessagesToLimit(
 }
 
 export async function POST(req: NextRequest) {
-  const { message, provider, model, sessionId, reasoning_effort } = await req.json();
+  const { message, provider, model, sessionId, reasoning_effort, attachments } = await req.json();
   const prisma = await getDb();
 
   const providerName: ProviderName =
@@ -107,8 +128,16 @@ export async function POST(req: NextRequest) {
   const selectedModel = model || await getSavedModel(providerName);
   const effort = reasoning_effort || "high";
 
+  let fullMessage = message;
+  if (attachments && attachments.length > 0) {
+    const fileContents = attachments.map((a: { name: string; content: string }) =>
+      `\n\n--- File: ${a.name} ---\n${a.content}\n--- End of ${a.name} ---`
+    ).join("");
+    fullMessage = message + fileContents;
+  }
+
   await prisma.chatMessage.create({
-    data: { role: "user", content: message, provider: providerName, sessionId: sessionId || null },
+    data: { role: "user", content: fullMessage, provider: providerName, sessionId: sessionId || null },
   });
 
   const financialContext = await buildFinancialContext();
@@ -140,7 +169,7 @@ export async function POST(req: NextRequest) {
     })),
   ];
 
-  const inputTokens = systemTokens + conversationTokens + countTokens(message) + 20;
+  const inputTokens = systemTokens + conversationTokens + countTokens(fullMessage) + 20;
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -313,7 +342,7 @@ Return ONLY valid JSON, nothing else.`,
                     },
                     {
                       role: "user",
-                      content: `User message: ${message}\n\nAI response: ${fullContent}`,
+                      content: `User message: ${fullMessage}\n\nAI response: ${fullContent}`,
                     },
                   ],
                   temperature: 0,
