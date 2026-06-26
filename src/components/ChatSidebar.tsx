@@ -387,28 +387,23 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
             chunkIdx++;
             if (data.type === "thinking") {
               assistantThinking += data.text;
-              if (chunkIdx <= 3 || data.text.length > 50) {
-                console.log(`[FE DEBUG] Chunk ${chunkIdx}: thinking text len=${data.text.length}, total thinking=${assistantThinking.length}`);
-              }
               setMessages((prev) => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
                 if (last?.role === "assistant" && last.thinking !== undefined) {
-                  last.thinking = assistantThinking;
+                  updated[updated.length - 1] = { ...last, thinking: assistantThinking };
                 } else {
                   updated.push({ role: "assistant", content: "", thinking: assistantThinking });
                 }
-                return [...updated];
+                return updated;
               });
             } else if (data.type === "content") {
               assistantContent += data.text;
-              console.log(`[FE DEBUG] Chunk ${chunkIdx}: content text="${data.text}", total content="${assistantContent}"`);
               setMessages((prev) => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
                 if (last?.role === "assistant") {
-                  last.content = assistantContent;
-                  if (assistantThinking) last.thinking = assistantThinking;
+                  updated[updated.length - 1] = { ...last, content: assistantContent, thinking: assistantThinking || last.thinking };
                 } else {
                   updated.push({ role: "assistant", content: assistantContent, thinking: assistantThinking || undefined });
                 }
