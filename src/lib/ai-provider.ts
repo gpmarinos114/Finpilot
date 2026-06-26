@@ -2,8 +2,26 @@ import OpenAI from "openai";
 import { getDb } from "./db";
 import { PROVIDERS } from "./providers";
 import type { ProviderName } from "@/types/financial";
+import fs from "fs";
+import path from "path";
+
+const API_KEYS_PATH = path.join(process.cwd(), "api-keys.json");
+
+function loadApiKeys(): Record<string, string> {
+  try {
+    if (fs.existsSync(API_KEYS_PATH)) {
+      return JSON.parse(fs.readFileSync(API_KEYS_PATH, "utf-8"));
+    }
+  } catch { /* ignore */ }
+  return {};
+}
 
 async function getSetting(key: string): Promise<string | null> {
+  // Check local API keys file first
+  const apiKeys = loadApiKeys();
+  if (apiKeys[key]) return apiKeys[key];
+
+  // Fall back to DB settings
   try {
     const prisma = await getDb();
     const setting = await prisma.setting.findUnique({ where: { key } });
