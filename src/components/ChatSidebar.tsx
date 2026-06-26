@@ -127,7 +127,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
   const [showCommands, setShowCommands] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [filteredCommands, setFilteredCommands] = useState(SLASH_COMMANDS);
-  const [attachments, setAttachments] = useState<{ name: string; content: string }[]>([]);
+  const [attachments, setAttachments] = useState<{ name: string; content: string; isImage: boolean }[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -317,10 +317,19 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const newAttachments: { name: string; content: string }[] = [];
+    const newAttachments: { name: string; content: string; isImage: boolean }[] = [];
     for (const file of Array.from(files)) {
-      const text = await file.text();
-      newAttachments.push({ name: file.name, content: text });
+      if (file.type.startsWith("image/")) {
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+        newAttachments.push({ name: file.name, content: dataUrl, isImage: true });
+      } else {
+        const text = await file.text();
+        newAttachments.push({ name: file.name, content: text, isImage: false });
+      }
     }
     setAttachments((prev) => [...prev, ...newAttachments]);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -343,7 +352,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
     setInput("");
     const currentAttachments = [...attachments];
     setAttachments([]);
-    addMessage({ role: "user", content: userMessage + (currentAttachments.length > 0 ? `\n\n📎 ${currentAttachments.map((a) => a.name).join(", ")}` : "") });
+    addMessage({ role: "user", content: userMessage + (currentAttachments.length > 0 ? `\n\n📎 ${currentAttachments.map((a) => a.name).join(", ")}` : ""), attachments: currentAttachments.map((a) => ({ name: a.name, content: a.content, isImage: a.isImage })) });
     setLoading(true);
 
     try {
@@ -580,7 +589,10 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
           <div className="flex flex-wrap gap-1.5 mb-2">
             {attachments.map((a, i) => (
               <span key={i} className="inline-flex items-center gap-1 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300">
-                📎 {a.name}
+                {a.isImage ? (
+                  <img src={a.content} alt={a.name} className="w-5 h-5 rounded object-cover" />
+                ) : "📎"}
+                <span className="max-w-[80px] truncate">{a.name}</span>
                 <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-red-400 ml-0.5">&times;</button>
               </span>
             ))}
@@ -593,7 +605,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
             onChange={handleFileSelect}
             className="hidden"
             multiple
-            accept=".csv,.txt,.json,.md,.tsv,.xlsx,.xls,.pdf"
+            accept=".csv,.txt,.json,.md,.tsv,.xlsx,.xls,.pdf,image/*"
           />
           <button
             onClick={() => fileInputRef.current?.click()}

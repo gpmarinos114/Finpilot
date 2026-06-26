@@ -23,6 +23,7 @@ const SYSTEM_PROMPT = `You are an AI financial planner with persistent memory. Y
 - LEARN and REMEMBER the user's preferences, patterns, and context
 - **MANAGE financial data directly** — create, update, and delete income, investments, credit cards, loans, bills, and savings goals
 - **Process uploaded files** — parse CSVs, spreadsheets, and text files to bulk-update financial data
+- **Read images** — analyze screenshots of portfolios, statements, and financial documents using vision
 
 ## Managing Financial Data
 You have tools to directly manage the user's financial data:
@@ -41,6 +42,13 @@ When the user uploads a file (CSV, JSON, text, etc.), its content is included in
 - Map them to the appropriate financial model
 - Use the tools to create each row
 - Report what was created/updated
+
+## Processing Images
+When the user uploads an image (screenshot of portfolio, bank statement, etc.), use your vision capabilities to:
+- Read and extract all financial data visible in the image
+- Identify account names, balances, ticker symbols, shares, amounts
+- Use the financial data tools to create or update records based on what you see
+- Confirm what you extracted and ask for corrections if needed
 
 ## Learning About the User
 You maintain a client profile (memory/client-profile.md) that evolves as you learn. After each meaningful conversation, you SHOULD update the profile using the save_memory tool. Pay attention to:
@@ -129,11 +137,17 @@ export async function POST(req: NextRequest) {
   const effort = reasoning_effort || "high";
 
   let fullMessage = message;
+  const imageAttachments: { name: string; dataUrl: string }[] = [];
   if (attachments && attachments.length > 0) {
-    const fileContents = attachments.map((a: { name: string; content: string }) =>
-      `\n\n--- File: ${a.name} ---\n${a.content}\n--- End of ${a.name} ---`
-    ).join("");
-    fullMessage = message + fileContents;
+    const textParts: string[] = [];
+    for (const a of attachments) {
+      if (a.isImage) {
+        imageAttachments.push({ name: a.name, dataUrl: a.content });
+      } else {
+        textParts.push(`\n\n--- File: ${a.name} ---\n${a.content}\n--- End of ${a.name} ---`);
+      }
+    }
+    if (textParts.length > 0) fullMessage = message + textParts.join("");
   }
 
   await prisma.chatMessage.create({
@@ -168,6 +182,17 @@ export async function POST(req: NextRequest) {
       content: m.content,
     })),
   ];
+
+  // If the last message has images, replace it with multimodal content
+  if (imageAttachments.length > 0) {
+    const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+      { type: "text", text: fullMessage },
+    ];
+    for (const img of imageAttachments) {
+      content.push({ type: "image_url", image_url: { url: img.dataUrl } });
+    }
+    messages[messages.length - 1] = { role: "user", content } as never;
+  }
 
   const inputTokens = systemTokens + conversationTokens + countTokens(fullMessage) + 20;
 

@@ -9,6 +9,7 @@ export interface Message {
   content: string;
   thinking?: string;
   toolName?: string;
+  attachments?: { name: string; content: string; isImage: boolean }[];
 }
 
 export interface TokenUsage {
