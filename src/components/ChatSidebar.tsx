@@ -373,6 +373,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
       const decoder = new TextDecoder();
       let assistantContent = "";
       let assistantThinking = "";
+      let chunkIdx = 0;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -383,16 +384,12 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
         for (const line of lines) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.type === "usage") {
-              setTokenUsage({
-                inputTokens: data.inputTokens,
-                outputTokens: data.outputTokens,
-                totalTokens: data.totalTokens,
-                maxContext: data.maxContext,
-                usedPercent: data.usedPercent,
-              });
-            } else if (data.type === "thinking") {
+            chunkIdx++;
+            if (data.type === "thinking") {
               assistantThinking += data.text;
+              if (chunkIdx <= 3 || data.text.length > 50) {
+                console.log(`[FE DEBUG] Chunk ${chunkIdx}: thinking text len=${data.text.length}, total thinking=${assistantThinking.length}`);
+              }
               setMessages((prev) => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
@@ -405,6 +402,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
               });
             } else if (data.type === "content") {
               assistantContent += data.text;
+              console.log(`[FE DEBUG] Chunk ${chunkIdx}: content text="${data.text}", total content="${assistantContent}"`);
               setMessages((prev) => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
@@ -426,11 +424,15 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
                 return [...updated];
               });
             } else if (data.type === "error") {
+              console.log(`[FE DEBUG] Error event: ${data.error}`);
               addMessage({ role: "assistant", content: `Error: ${data.error}` });
+            } else if (data.type === "done") {
+              console.log(`[FE DEBUG] Done event received. content="${assistantContent}"`);
             }
           } catch {}
         }
       }
+      console.log(`[FE DEBUG] Stream complete. finalContent="${assistantContent}", finalThinking="${assistantThinking.slice(0, 100)}..."`);
     } catch (error) {
       addMessage({
         role: "assistant",
