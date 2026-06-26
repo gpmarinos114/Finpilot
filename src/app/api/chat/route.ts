@@ -127,6 +127,7 @@ function trimMessagesToLimit(
 
 export async function POST(req: NextRequest) {
   const { message, provider, model, sessionId, reasoning_effort, attachments } = await req.json();
+  const tSetup = Date.now();
   const prisma = await getDb();
 
   const providerName: ProviderName =
@@ -135,6 +136,7 @@ export async function POST(req: NextRequest) {
   const client = await createAIProvider(providerName, apiKey);
   const selectedModel = model || await getSavedModel(providerName);
   const effort = reasoning_effort || "high";
+  console.log(`[DEBUG] Setup took ${Date.now() - tSetup}ms (provider=${providerName}, model=${selectedModel})`);
 
   let fullMessage = message;
   const imageAttachments: { name: string; dataUrl: string }[] = [];
@@ -154,14 +156,18 @@ export async function POST(req: NextRequest) {
     data: { role: "user", content: fullMessage, provider: providerName, sessionId: sessionId || null },
   });
 
+  const t0 = Date.now();
   const financialContext = await buildFinancialContext();
+  console.log(`[DEBUG] buildFinancialContext took ${Date.now() - t0}ms, context length: ${financialContext.length} chars`);
   const fullSystemPrompt = `${SYSTEM_PROMPT}\n\n${financialContext}`;
 
+  const t1 = Date.now();
   const recentMessages = await prisma.chatMessage.findMany({
     where: sessionId ? { sessionId } : undefined,
     orderBy: { createdAt: "desc" },
     take: 100,
   });
+  console.log(`[DEBUG] fetchRecentMessages took ${Date.now() - t1}ms, count: ${recentMessages.length}`);
 
   const allMessages: MessageEntry[] = recentMessages.reverse().map((m) => ({
     role: m.role,
@@ -169,11 +175,13 @@ export async function POST(req: NextRequest) {
   }));
 
   const maxContext = CONTEXT_LIMITS[selectedModel] || 128000;
+  const t2 = Date.now();
   const { messages: trimmedMessages, systemTokens, conversationTokens } = trimMessagesToLimit(
     fullSystemPrompt,
     allMessages,
     maxContext
   );
+  console.log(`[DEBUG] trimMessagesToLimit took ${Date.now() - t2}ms, trimmed: ${trimmedMessages.length}, systemTokens: ${systemTokens}, conversationTokens: ${conversationTokens}`);
 
   const messages = [
     { role: "system" as const, content: fullSystemPrompt },
