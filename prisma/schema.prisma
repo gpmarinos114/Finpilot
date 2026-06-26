@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Income {
+  id        String   @id @default(cuid())
+  source    String
+  amount    Float
+  frequency String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Investment {
+  id           String   @id @default(cuid())
+  name         String
+  type         String
+  ticker       String?
+  shares       Float?
+  costBasis    Float?
+  currentValue Float
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CreditCard {
+  id         String   @id @default(cuid())
+  name       String
+  balance    Float
+  limit      Float
+  apr        Float
+  minPayment Float
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Loan {
+  id             String   @id @default(cuid())
+  name           String
+  type           String
+  balance        Float
+  interestRate   Float
+  monthlyPayment Float
+  termMonths     Int?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Bill {
+  id        String   @id @default(cuid())
+  name      String
+  amount    Float
+  category  String
+  frequency String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SavingsGoal {
+  id            String   @id @default(cuid())
+  name          String
+  targetAmount  Float
+  currentAmount Float
+  targetDate    String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  role      String
+  content   String
+  toolName  String?
+  provider  String?
+  sessionId String?
+  createdAt DateTime @default(now())
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model MemoryFile {
+  path      String   @id
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Snapshot {
+  id          String   @id @default(cuid())
+  date        String   @unique
+  totalIncome Float
+  totalInvestments Float
+  totalCreditCardDebt Float
+  totalLoanDebt Float
+  totalMonthlyBills Float
+  totalSavings Float
+  netWorth    Float
+  monthlyCashFlow Float
+  details     String
+  createdAt   DateTime @default(now())
+}

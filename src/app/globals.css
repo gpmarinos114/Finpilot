@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --background: #030712;
+  --foreground: #f9fafb;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 #111827;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+.prose-invert {
+  --tw-prose-body: #d1d5db;
+  --tw-prose-headings: #f9fafb;
+  --tw-prose-links: #60a5fa;
+  --tw-prose-bold: #f9fafb;
+  --tw-prose-counters: #9ca3af;
+  --tw-prose-bullets: #6b7280;
+  --tw-prose-hr: #374151;
+  --tw-prose-quotes: #f9fafb;
+  --tw-prose-quote-borders: #374151;
+  --tw-prose-code: #f9fafb;
+  --tw-prose-pre-code: #d1d5db;
+  --tw-prose-pre-bg: #111827;
+  --tw-prose-th-borders: #4b5563;
+  --tw-prose-td-borders: #374151;
+}
