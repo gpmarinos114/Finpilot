@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 
 export type ReasoningEffort = "low" | "medium" | "high" | "max";
 
@@ -37,18 +37,61 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
+const STORAGE_KEY = "finpilot-chat";
+
+function saveToStorage(sessionId: string | null, sessionName: string | null, messages: Message[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sessionId, sessionName, messages }));
+  } catch { /* quota exceeded, ignore */ }
+}
+
+function loadFromStorage(): { sessionId: string | null; sessionName: string | null; messages: Message[] } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return null;
+}
+
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [sessionName, setSessionName] = useState<string | null>(null);
+  const [sessionId, setSessionIdState] = useState<string | null>(null);
+  const [sessionName, setSessionNameState] = useState<string | null>(null);
   const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort>("high");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    const saved = loadFromStorage();
+    if (saved) {
+      setSessionIdState(saved.sessionId);
+      setSessionNameState(saved.sessionName);
+      setMessages(saved.messages || []);
+    }
+    setHydrated(true);
+  }, []);
+
+  // Persist to localStorage when state changes (after hydration)
+  useEffect(() => {
+    if (!hydrated) return;
+    saveToStorage(sessionId, sessionName, messages);
+  }, [sessionId, sessionName, messages, hydrated]);
+
+  const setSessionId = useCallback((id: string | null) => {
+    setSessionIdState(id);
+  }, []);
+
+  const setSessionName = useCallback((name: string | null) => {
+    setSessionNameState(name);
+  }, []);
 
   const clearChat = useCallback(() => {
     setMessages([]);
     setTokenUsage(null);
-    setSessionId(null);
-    setSessionName(null);
+    setSessionIdState(null);
+    setSessionNameState(null);
+    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const addMessage = useCallback((msg: Message) => {

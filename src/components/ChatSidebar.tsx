@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useChat } from "@/contexts/ChatContext";
+import { emitDataChanged } from "@/lib/events";
 import type { ReasoningEffort, Message } from "@/contexts/ChatContext";
 import type { ProviderName } from "@/types/financial";
 
@@ -374,6 +375,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
       let assistantContent = "";
       let assistantThinking = "";
       let chunkIdx = 0;
+      let hadToolCalls = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -410,6 +412,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
                 return [...updated];
               });
             } else if (data.type === "tool_call") {
+              hadToolCalls = true;
               addMessage({ role: "tool", content: `Calling tool: ${data.name}...`, toolName: data.name });
             } else if (data.type === "tool_result") {
               setMessages((prev) => {
@@ -428,6 +431,29 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
         }
       }
       console.log(`[FE DEBUG] Stream complete. finalContent="${assistantContent}", finalThinking="${assistantThinking.slice(0, 100)}..."`);
+      if (hadToolCalls) {
+        emitDataChanged();
+      }
+
+      // Auto-save session to DB
+      if (sessionId) {
+        fetch("/api/sessions", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: sessionId, name: sessionName, messages }),
+        }).catch(() => {});
+      } else {
+        const res = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: `Session ${new Date().toLocaleString()}`, messages }),
+        }).catch(() => null);
+        if (res && res.ok) {
+          const session = await res.json();
+          setSessionId(session.id);
+          setSessionName(session.name);
+        }
+      }
     } catch (error) {
       addMessage({
         role: "assistant",

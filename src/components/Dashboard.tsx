@@ -11,6 +11,7 @@ import BillCard from "./BillCard";
 import SavingsCard from "./SavingsCard";
 import SnapshotsPanel from "./SnapshotsPanel";
 import MemoryPanel from "./MemoryPanel";
+import { onDataChanged } from "@/lib/events";
 
 export default function Dashboard() {
   const [data, setData] = useState({
@@ -43,6 +44,13 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
   }, []);
+
+  useEffect(() => {
+    return onDataChanged(() => {
+      fetchAll();
+      fetch("/api/snapshots", { method: "POST" }).catch(() => {});
+    });
+  }, [fetchAll]);
 
   const summary = {
     totalIncome: (data.income as { amount: number; frequency: string }[])
