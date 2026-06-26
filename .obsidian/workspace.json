@@ -185,6 +185,7 @@
   },
   "active": "48d0cafee27cfbdd",
   "lastOpenFiles": [
+    "LICENSE",
     "src/components/SnapshotsPanel.tsx",
     "src/app/api/snapshots/route.ts",
     "src/app/api/snapshots",
@@ -197,7 +198,6 @@
     "node_modules/@prisma/adapter-libsql/LICENSE",
     "node_modules/@libsql/hrana-client/lib-esm/encoding/protobuf/util.js",
     "node_modules/@libsql/hrana-client/lib-esm/encoding/protobuf/util.d.ts",
-    "node_modules/@libsql/hrana-client/lib-esm/encoding/json/encode.js",
     "node_modules/@prisma/adapter-libsql/README.md",
     "node_modules/@libsql/linux-x64-musl/README.md",
     "node_modules/ws/README.md",

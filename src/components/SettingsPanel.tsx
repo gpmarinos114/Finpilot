@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Props {
   onClose: () => void;
@@ -26,6 +26,9 @@ export default function SettingsPanel({ onClose }: Props) {
     TURSO_TOKEN: false,
   });
   const [needsRestart, setNeedsRestart] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const [migrateMsg, setMigrateMsg] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -55,6 +58,52 @@ export default function SettingsPanel({ onClose }: Props) {
     setSaved(true);
     setNeedsRestart(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleExport = async () => {
+    setMigrating(true);
+    setMigrateMsg("");
+    try {
+      const res = await fetch("/api/migrate");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `finpilot-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMigrateMsg("Export downloaded successfully.");
+    } catch {
+      setMigrateMsg("Export failed.");
+    }
+    setMigrating(false);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMigrating(true);
+    setMigrateMsg("");
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const res = await fetch("/api/migrate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (result.success) {
+        const counts = Object.entries(result.imported).map(([k, v]) => `${v} ${k}`).join(", ");
+        setMigrateMsg(`Imported: ${counts}`);
+      } else {
+        setMigrateMsg(`Import failed: ${result.error}`);
+      }
+    } catch {
+      setMigrateMsg("Import failed — invalid file.");
+    }
+    setMigrating(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const providers = [
@@ -130,6 +179,41 @@ export default function SettingsPanel({ onClose }: Props) {
               </>
             )}
           </div>
+        </div>
+
+        {/* Migrate Data Section */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-300 mb-3">Migrate Data</h3>
+          <p className="text-xs text-gray-500 mb-3">
+            Export your data from the current backend, then switch backends and import. This lets you move between Local SQLite and Turso.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={handleExport}
+              disabled={migrating}
+              className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white px-3 py-2 rounded text-sm"
+            >
+              {migrating ? "Working..." : "Export Data"}
+            </button>
+            <label className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white px-3 py-2 rounded text-sm text-center cursor-pointer">
+              Import Data
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+                disabled={migrating}
+              />
+            </label>
+          </div>
+          {migrateMsg && <p className="text-xs text-emerald-400 mt-2">{migrateMsg}</p>}
+          <ol className="text-xs text-gray-500 mt-2 space-y-1 list-decimal list-inside">
+            <li>Export data from your current backend</li>
+            <li>Switch the backend above (Local ↔ Turso)</li>
+            <li>Save & restart the app</li>
+            <li>Open Settings again and import the exported file</li>
+          </ol>
         </div>
 
         {/* API Keys Section */}
