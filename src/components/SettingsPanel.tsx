@@ -113,26 +113,26 @@ export default function SettingsPanel({ onClose }: Props) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-base-300 border border-base-500 rounded-xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-bold text-white">Settings</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">&times;</button>
+          <h2 className="text-lg font-bold txt-primary">Settings</h2>
+          <button onClick={onClose} className="txt-muted hover:txt-primary text-xl">&times;</button>
         </div>
 
         {/* Database Backend Section */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Database</h3>
+          <h3 className="text-sm font-semibold txt-secondary mb-3">Database</h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-gray-300 mb-1">Backend</label>
+              <label className="block text-sm txt-secondary mb-1">Backend</label>
               <select
                 value={dbConfig.DB_BACKEND}
                 onChange={(e) => setDbConfig({ ...dbConfig, DB_BACKEND: e.target.value })}
-                className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
+                className="w-full bg-base-200 border border-base-700 rounded px-3 py-2 text-sm txt-primary"
               >
                 <option value="local">Local SQLite</option>
                 <option value="turso">Turso (Cloud)</option>
@@ -142,37 +142,37 @@ export default function SettingsPanel({ onClose }: Props) {
             {dbConfig.DB_BACKEND === "turso" && (
               <>
                 <div>
-                  <label className="block text-sm text-gray-300 mb-1">Turso Database URL</label>
+                  <label className="block text-sm txt-secondary mb-1">Turso Database URL</label>
                   <input
                     type="text"
                     value={dbConfig.TURSO_URL}
                     onChange={(e) => setDbConfig({ ...dbConfig, TURSO_URL: e.target.value })}
                     placeholder="libsql://your-db.turso.io"
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
+                    className="w-full bg-base-200 border border-base-700 rounded px-3 py-2 text-sm txt-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-300 mb-1">Auth Token</label>
+                  <label className="block text-sm txt-secondary mb-1">Auth Token</label>
                   <div className="relative">
                     <input
                       type={showKeys.TURSO_TOKEN ? "text" : "password"}
                       value={dbConfig.TURSO_TOKEN}
                       onChange={(e) => setDbConfig({ ...dbConfig, TURSO_TOKEN: e.target.value })}
                       placeholder="eyJ..."
-                      className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 pr-10 text-sm text-white"
+                      className="w-full bg-base-200 border border-base-700 rounded px-3 py-2 pr-10 text-sm txt-primary"
                     />
                     <button
                       type="button"
                       onClick={() => setShowKeys({ ...showKeys, TURSO_TOKEN: !showKeys.TURSO_TOKEN })}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 txt-muted hover:txt-primary text-xs"
                     >
                       {showKeys.TURSO_TOKEN ? "Hide" : "Show"}
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs txt-faint">
                   Get your database URL and auth token from{" "}
-                  <a href="https://turso.tech" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  <a href="https://turso.tech" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
                     turso.tech
                   </a>
                 </p>
@@ -183,19 +183,19 @@ export default function SettingsPanel({ onClose }: Props) {
 
         {/* Migrate Data Section */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Migrate Data</h3>
-          <p className="text-xs text-gray-500 mb-3">
+          <h3 className="text-sm font-semibold txt-secondary mb-3">Migrate Data</h3>
+          <p className="text-xs txt-faint mb-3">
             Export your data from the current backend, then switch backends and import. This lets you move between Local SQLite and Turso.
           </p>
           <div className="flex gap-3">
             <button
               onClick={handleExport}
               disabled={migrating}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white px-3 py-2 rounded text-sm"
+              className="flex-1 bg-base-100 hover:bg-base-600 disabled:bg-base-200 txt-primary px-3 py-2 rounded text-sm"
             >
               {migrating ? "Working..." : "Export Data"}
             </button>
-            <label className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white px-3 py-2 rounded text-sm text-center cursor-pointer">
+            <label className="flex-1 bg-base-100 hover:bg-base-600 disabled:bg-base-200 txt-primary px-3 py-2 rounded text-sm text-center cursor-pointer">
               Import Data
               <input
                 ref={fileInputRef}
@@ -207,8 +207,8 @@ export default function SettingsPanel({ onClose }: Props) {
               />
             </label>
           </div>
-          {migrateMsg && <p className="text-xs text-emerald-400 mt-2">{migrateMsg}</p>}
-          <ol className="text-xs text-gray-500 mt-2 space-y-1 list-decimal list-inside">
+          {migrateMsg && <p className="text-xs text-ok mt-2">{migrateMsg}</p>}
+          <ol className="text-xs txt-faint mt-2 space-y-1 list-decimal list-inside">
             <li>Export data from your current backend</li>
             <li>Switch the backend above (Local ↔ Turso)</li>
             <li>Save & restart the app</li>
@@ -218,23 +218,23 @@ export default function SettingsPanel({ onClose }: Props) {
 
         {/* API Keys Section */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">API Keys</h3>
+          <h3 className="text-sm font-semibold txt-secondary mb-3">API Keys</h3>
           <div className="space-y-4">
             {providers.map((p) => (
               <div key={p.key}>
-                <label className="block text-sm text-gray-300 mb-1">{p.label}</label>
+                <label className="block text-sm txt-secondary mb-1">{p.label}</label>
                 <div className="relative">
                   <input
                     type={showKeys[p.key] ? "text" : "password"}
                     value={keys[p.key]}
                     onChange={(e) => setKeys({ ...keys, [p.key]: e.target.value })}
                     placeholder={p.placeholder}
-                    className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 pr-10 text-sm text-white"
+                    className="w-full bg-base-200 border border-base-700 rounded px-3 py-2 pr-10 text-sm txt-primary"
                   />
                   <button
                     type="button"
                     onClick={() => setShowKeys({ ...showKeys, [p.key]: !showKeys[p.key] })}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 txt-muted hover:txt-primary text-xs"
                   >
                     {showKeys[p.key] ? "Hide" : "Show"}
                   </button>
@@ -244,12 +244,12 @@ export default function SettingsPanel({ onClose }: Props) {
           </div>
         </div>
 
-        <p className="text-xs text-gray-500 mb-2">
+        <p className="text-xs txt-faint mb-2">
           Keys are stored locally in your database. They are never sent anywhere except to the respective AI provider.
         </p>
 
         {needsRestart && (
-          <p className="text-xs text-amber-400 mb-2">
+          <p className="text-xs text-warn mb-2">
             Database backend changes require an app restart to take effect.
           </p>
         )}
@@ -258,13 +258,13 @@ export default function SettingsPanel({ onClose }: Props) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded text-sm font-medium"
+            className="flex-1 bg-accent hover:bg-accent-hover disabled:bg-base-600 txt-primary px-4 py-2 rounded text-sm font-medium"
           >
             {saving ? "Saving..." : saved ? "Saved!" : "Save"}
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
+            className="px-4 py-2 bg-base-100 hover:bg-base-600 txt-primary rounded text-sm"
           >
             Close
           </button>

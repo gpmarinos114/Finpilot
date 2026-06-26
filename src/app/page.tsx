@@ -6,12 +6,13 @@ import ChatSidebar from "@/components/ChatSidebar";
 import ProviderSelector from "@/components/ProviderSelector";
 import SettingsPanel from "@/components/SettingsPanel";
 import ResizablePanel from "@/components/ResizablePanel";
-import { ChatProvider, useChat } from "@/contexts/ChatContext";
+import { useChat } from "@/contexts/ChatContext";
+import { useTheme, THEMES } from "@/contexts/ThemeContext";
 import type { ProviderName } from "@/types/financial";
-import type { ReasoningEffort } from "@/contexts/ChatContext";
 
 function AppContent() {
   const { reasoningEffort, setReasoningEffort } = useChat();
+  const { theme, setTheme } = useTheme();
   const [provider, setProvider] = useState<ProviderName>("deepseek");
   const [model, setModel] = useState("");
   const [swapped, setSwapped] = useState(false);
@@ -64,9 +65,9 @@ function AppContent() {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-white">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-900">
-        <h1 className="text-lg font-bold">AI Financial Planner</h1>
+    <div className="flex flex-col h-screen bg-base-400 txt-primary">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-base-300 bg-base-300">
+        <h1 className="text-lg font-bold">FinPilot</h1>
         <div className="flex items-center gap-3">
           <ProviderSelector
             provider={provider}
@@ -76,16 +77,26 @@ function AppContent() {
             onModelChange={handleModelChange}
             onReasoningChange={setReasoningEffort}
           />
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value as typeof theme)}
+            className="bg-base-100 hover:bg-base-600 txt-primary px-2 py-1 rounded text-sm border border-base-700 cursor-pointer"
+            title="Theme"
+          >
+            {THEMES.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
           <button
             onClick={() => setSwapped(!swapped)}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"
+            className="bg-base-100 hover:bg-base-600 txt-primary px-3 py-1 rounded text-sm"
             title="Swap layout"
           >
             ⇄
           </button>
           <button
             onClick={() => setShowSettings(true)}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"
+            className="bg-base-100 hover:bg-base-600 txt-primary px-3 py-1 rounded text-sm"
             title="API Settings"
           >
             Settings
@@ -117,9 +128,5 @@ function AppContent() {
 }
 
 export default function Home() {
-  return (
-    <ChatProvider>
-      <AppContent />
-    </ChatProvider>
-  );
+  return <AppContent />;
 }

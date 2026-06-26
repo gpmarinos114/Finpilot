@@ -13,7 +13,7 @@ const THINKING_COMPONENTS: any = {
   ul: ({ children }: { children: React.ReactNode }) => <ul className="list-disc pl-3 mb-1">{children}</ul>,
   ol: ({ children }: { children: React.ReactNode }) => <ol className="list-decimal pl-3 mb-1">{children}</ol>,
   li: ({ children }: { children: React.ReactNode }) => <li className="mb-0.5">{children}</li>,
-  code: ({ children, ...props }: any) => <code className="bg-gray-700/50 px-1 rounded text-[10px]" {...props}>{children}</code>,
+  code: ({ children, ...props }: any) => <code className="bg-base-100/50 px-1 rounded text-[10px]" {...props}>{children}</code>,
 };
 
 const MAIN_COMPONENTS: any = {
@@ -27,19 +27,19 @@ const MAIN_COMPONENTS: any = {
   code: ({ children, className, ...props }: any) => {
     const isInline = !className;
     return isInline ? (
-      <code className="bg-gray-700 px-1 rounded text-xs" {...props}>{children}</code>
+      <code className="bg-base-100 px-1 rounded text-xs" {...props}>{children}</code>
     ) : (
-      <code className="block bg-gray-900 p-2 rounded text-xs overflow-x-auto" {...props}>{children}</code>
+      <code className="block bg-base-300 p-2 rounded text-xs overflow-x-auto" {...props}>{children}</code>
     );
   },
-  pre: ({ children }: { children: React.ReactNode }) => <pre className="bg-gray-900 p-2 rounded mb-2 overflow-x-auto">{children}</pre>,
+  pre: ({ children }: { children: React.ReactNode }) => <pre className="bg-base-300 p-2 rounded mb-2 overflow-x-auto">{children}</pre>,
   table: ({ children }: { children: React.ReactNode }) => <table className="border-collapse mb-2 text-xs">{children}</table>,
-  th: ({ children }: { children: React.ReactNode }) => <th className="border border-gray-600 px-2 py-1 bg-gray-700">{children}</th>,
-  td: ({ children }: { children: React.ReactNode }) => <td className="border border-gray-600 px-2 py-1">{children}</td>,
-  strong: ({ children }: { children: React.ReactNode }) => <strong className="font-bold text-white">{children}</strong>,
+  th: ({ children }: { children: React.ReactNode }) => <th className="border border-base-700 px-2 py-1 bg-base-100">{children}</th>,
+  td: ({ children }: { children: React.ReactNode }) => <td className="border border-base-700 px-2 py-1">{children}</td>,
+  strong: ({ children }: { children: React.ReactNode }) => <strong className="font-bold txt-primary">{children}</strong>,
   em: ({ children }: { children: React.ReactNode }) => <em className="italic">{children}</em>,
   blockquote: ({ children }: { children: React.ReactNode }) => (
-    <blockquote className="border-l-2 border-gray-500 pl-2 italic mb-2">{children}</blockquote>
+    <blockquote className="border-l-2 border-base-600 pl-2 italic mb-2">{children}</blockquote>
   ),
 };
 
@@ -51,10 +51,10 @@ const ChatMessage = memo(function ChatMessage({ msg, index }: { msg: Message; in
       <div
         className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
           msg.role === "user"
-            ? "bg-blue-600 text-white"
+            ? "bg-accent txt-primary"
             : msg.role === "tool"
-            ? "bg-gray-700 text-gray-300 text-xs italic"
-            : "bg-gray-800 text-gray-200"
+            ? "bg-base-100 txt-secondary text-xs italic"
+            : "bg-base-200 txt-secondary"
         }`}
       >
         {msg.role === "user" ? (
@@ -63,14 +63,14 @@ const ChatMessage = memo(function ChatMessage({ msg, index }: { msg: Message; in
           <div>
             {msg.thinking && (
               <details className="mb-2 group">
-                <summary className="text-xs text-purple-400 cursor-pointer hover:text-purple-300 flex items-center gap-1 select-none">
+                <summary className="text-xs text-accent cursor-pointer hover:text-accent flex items-center gap-1 select-none">
                   <span className="transition-transform group-open:rotate-90">▶</span>
                   Thinking
-                  <span className="text-purple-500">
+                  <span className="text-accent">
                     ({msg.thinking.length > 0 ? `${Math.ceil(msg.thinking.length / 4)} tokens` : "..."})
                   </span>
                 </summary>
-                <div className="mt-2 pl-3 border-l-2 border-purple-500/30 text-xs text-purple-300/80 italic max-h-60 overflow-y-auto">
+                <div className="mt-2 pl-3 border-l-2 border-purple-500/30 text-xs text-accent/80 italic max-h-60 overflow-y-auto">
                   <ReactMarkdown remarkPlugins={PLUGINS} components={THINKING_COMPONENTS}>
                     {msg.thinking}
                   </ReactMarkdown>
@@ -449,21 +449,21 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
 
   const usageColor = tokenUsage
     ? tokenUsage.usedPercent > 80
-      ? "text-red-400"
+      ? "text-err"
       : tokenUsage.usedPercent > 50
       ? "text-yellow-400"
-      : "text-green-400"
-    : "text-gray-400";
+      : "text-ok"
+    : "txt-muted";
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 border-l border-gray-700">
-      <div className="p-3 border-b border-gray-700">
+    <div className="flex flex-col h-full bg-base-300 border-l border-base-500">
+      <div className="p-3 border-b border-base-500">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700"
+                className="txt-muted hover:txt-primary p-1 rounded hover:bg-base-100"
                 title="Menu"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -473,53 +473,53 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
                 </svg>
               </button>
               {showMenu && (
-                <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 min-w-[160px]">
+                <div className="absolute top-full left-0 mt-1 bg-base-200 border border-base-700 rounded-lg shadow-lg z-50 min-w-[160px]">
                   <button
                     onClick={() => { executeSlashCommand("/session new"); setShowMenu(false); }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-t-lg"
+                    className="w-full text-left px-3 py-2 text-sm txt-secondary hover:bg-base-100 rounded-t-lg"
                   >
                     New Session
                   </button>
                   <button
                     onClick={() => { executeSlashCommand("/session save"); setShowMenu(false); }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    className="w-full text-left px-3 py-2 text-sm txt-secondary hover:bg-base-100"
                   >
                     Save Session
                   </button>
                   <button
                     onClick={() => { executeSlashCommand("/session load"); setShowMenu(false); }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    className="w-full text-left px-3 py-2 text-sm txt-secondary hover:bg-base-100"
                   >
                     Load Session
                   </button>
-                  <div className="border-t border-gray-600" />
+                  <div className="border-t border-base-700" />
                   <button
                     onClick={() => { executeSlashCommand("/export"); setShowMenu(false); }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    className="w-full text-left px-3 py-2 text-sm txt-secondary hover:bg-base-100"
                   >
                     Export Chat
                   </button>
-                  <div className="border-t border-gray-600" />
+                  <div className="border-t border-base-700" />
                   {onCollapse && (
                     <button
                       onClick={() => { onCollapse(); setShowMenu(false); }}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                      className="w-full text-left px-3 py-2 text-sm txt-secondary hover:bg-base-100"
                     >
                       Collapse Panel
                     </button>
                   )}
                   <button
                     onClick={() => { clearChat(); setShowMenu(false); }}
-                    className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-b-lg"
+                    className="w-full text-left px-3 py-2 text-sm text-err hover:bg-base-100 rounded-b-lg"
                   >
                     Clear Chat
                   </button>
                 </div>
               )}
             </div>
-            <h2 className="font-semibold text-white text-sm">AI Planner</h2>
+            <h2 className="font-semibold txt-primary text-sm">AI Planner</h2>
             {sessionName && (
-              <span className="text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded">
+              <span className="text-xs text-accent bg-accent-soft px-2 py-0.5 rounded">
                 {sessionName}
               </span>
             )}
@@ -530,14 +530,14 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
             <span className={usageColor}>
               {formatTokens(tokenUsage.inputTokens)} / {formatTokens(tokenUsage.maxContext)} tokens
             </span>
-            <div className="flex-1 bg-gray-700 rounded-full h-1.5">
+            <div className="flex-1 bg-base-100 rounded-full h-1.5">
               <div
                 className={`h-1.5 rounded-full transition-all ${
                   tokenUsage.usedPercent > 80
-                    ? "bg-red-500"
+                    ? "bg-err"
                     : tokenUsage.usedPercent > 50
-                    ? "bg-yellow-500"
-                    : "bg-green-500"
+                    ? "bg-warn"
+                    : "bg-ok"
                 }`}
                 style={{ width: `${Math.min(tokenUsage.usedPercent, 100)}%` }}
               />
@@ -549,9 +549,9 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 text-sm py-8">
+          <div className="text-center txt-faint text-sm py-8">
             <p className="mb-2">Ask me anything about your finances.</p>
-            <p className="text-xs">Type <code className="bg-gray-700 px-1 rounded">/help</code> for commands</p>
+            <p className="text-xs">Type <code className="bg-base-100 px-1 rounded">/help</code> for commands</p>
           </div>
         )}
         {messages.map((msg, i) => (
@@ -559,7 +559,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
         ))}
         {loading && messages[messages.length - 1]?.role !== "assistant" && (
           <div className="flex justify-start">
-            <div className="bg-gray-800 rounded-lg px-3 py-2 text-sm text-gray-400">
+            <div className="bg-base-200 rounded-lg px-3 py-2 text-sm txt-muted">
               Thinking...
             </div>
           </div>
@@ -567,9 +567,9 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-3 border-t border-gray-700 relative">
+      <div className="p-3 border-t border-base-500 relative">
         {showCommands && filteredCommands.length > 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 mx-3 bg-gray-800 border border-gray-600 rounded-lg overflow-hidden shadow-lg">
+          <div className="absolute bottom-full left-0 right-0 mb-1 mx-3 bg-base-200 border border-base-700 rounded-lg overflow-hidden shadow-lg">
             {filteredCommands.map((c) => (
               <button
                 key={c.cmd}
@@ -577,10 +577,10 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
                   setInput(c.cmd + " ");
                   setShowCommands(false);
                 }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 flex justify-between"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-base-100 flex justify-between"
               >
-                <span className="text-white font-mono">{c.cmd}</span>
-                <span className="text-gray-400">{c.desc}</span>
+                <span className="txt-primary font-mono">{c.cmd}</span>
+                <span className="txt-muted">{c.desc}</span>
               </button>
             ))}
           </div>
@@ -588,12 +588,12 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
             {attachments.map((a, i) => (
-              <span key={i} className="inline-flex items-center gap-1 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-300">
+              <span key={i} className="inline-flex items-center gap-1 bg-base-200 border border-base-700 rounded px-2 py-0.5 text-xs txt-secondary">
                 {a.isImage ? (
                   <img src={a.content} alt={a.name} className="w-5 h-5 rounded object-cover" />
                 ) : "📎"}
                 <span className="max-w-[80px] truncate">{a.name}</span>
-                <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-red-400 ml-0.5">&times;</button>
+                <button onClick={() => removeAttachment(i)} className="txt-faint hover:text-err ml-0.5">&times;</button>
               </span>
             ))}
           </div>
@@ -609,7 +609,7 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-2 rounded text-sm"
+            className="bg-base-100 hover:bg-base-600 txt-secondary px-2 py-2 rounded text-sm"
             title="Attach file"
           >
             📎
@@ -619,13 +619,13 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
             placeholder="Ask or type / for commands..."
-            className="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm text-white"
+            className="flex-1 bg-base-200 border border-base-700 rounded px-3 py-2 text-sm txt-primary"
             disabled={loading}
           />
           <button
             onClick={sendMessage}
             disabled={loading || (!input.trim() && attachments.length === 0)}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded text-sm"
+            className="bg-accent hover:bg-accent-hover disabled:bg-base-600 txt-primary px-4 py-2 rounded text-sm"
           >
             Send
           </button>

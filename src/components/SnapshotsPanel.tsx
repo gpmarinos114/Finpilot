@@ -32,10 +32,10 @@ function fmt(n: number) {
 
 function ChangeBadge({ current, previous }: { current: number; previous: number }) {
   const diff = current - previous;
-  if (diff === 0) return <span className="text-xs text-gray-500">—</span>;
+  if (diff === 0) return <span className="text-xs txt-faint">—</span>;
   const positive = diff > 0;
   return (
-    <span className={`text-xs ${positive ? "text-green-400" : "text-red-400"}`}>
+    <span className={`text-xs ${positive ? "text-ok" : "text-err"}`}>
       {positive ? "+" : ""}${fmt(diff)}
     </span>
   );
@@ -66,11 +66,11 @@ export default function SnapshotsPanel() {
   return (
     <div className="overflow-x-auto">
       {snapshots.length === 0 ? (
-        <p className="text-gray-500 text-sm text-center py-4">No snapshots yet. They are created automatically when you update your financial data.</p>
+        <p className="txt-faint text-sm text-center py-4">No snapshots yet. They are created automatically when you update your financial data.</p>
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-gray-400 text-left border-b border-gray-700">
+            <tr className="txt-muted text-left border-b border-base-500">
               <th className="pb-2 pr-3 font-medium">Date</th>
               <th className="pb-2 pr-3 font-medium text-right">Net Worth</th>
               <th className="pb-2 pr-3 font-medium text-right">Cash Flow</th>
@@ -88,69 +88,69 @@ export default function SnapshotsPanel() {
               return (
                 <Fragment key={s.id}>
                   <tr
-                    className="border-b border-gray-700/50 hover:bg-gray-750 cursor-pointer"
+                    className="border-b border-base-500/50 hover:bg-base-50 cursor-pointer"
                     onClick={() => setExpanded(isOpen ? null : s.id)}
                   >
-                    <td className="py-2 pr-3 text-white">{s.date}</td>
+                    <td className="py-2 pr-3 txt-primary">{s.date}</td>
                     <td className="py-2 pr-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {prev && <ChangeBadge current={s.netWorth} previous={prev.netWorth} />}
-                        <span className={s.netWorth >= 0 ? "text-green-400" : "text-red-400"}>${fmt(s.netWorth)}</span>
+                        <span className={s.netWorth >= 0 ? "text-ok" : "text-err"}>${fmt(s.netWorth)}</span>
                       </div>
                     </td>
                     <td className="py-2 pr-3 text-right">
-                      <span className={s.monthlyCashFlow >= 0 ? "text-green-400" : "text-red-400"}>${fmt(s.monthlyCashFlow)}</span>
+                      <span className={s.monthlyCashFlow >= 0 ? "text-ok" : "text-err"}>${fmt(s.monthlyCashFlow)}</span>
                     </td>
-                    <td className="py-2 pr-3 text-right text-blue-400">${fmt(s.totalInvestments)}</td>
-                    <td className="py-2 pr-3 text-right text-emerald-400">${fmt(s.totalSavings)}</td>
-                    <td className="py-2 pr-3 text-right text-red-400">${fmt(totalDebt)}</td>
-                    <td className="py-2 text-gray-400 text-xs">{isOpen ? "▼" : "▶"}</td>
+                    <td className="py-2 pr-3 text-right text-accent">${fmt(s.totalInvestments)}</td>
+                    <td className="py-2 pr-3 text-right text-ok">${fmt(s.totalSavings)}</td>
+                    <td className="py-2 pr-3 text-right text-err">${fmt(totalDebt)}</td>
+                    <td className="py-2 txt-muted text-xs">{isOpen ? "▼" : "▶"}</td>
                   </tr>
                   {isOpen && (
                     <tr>
-                      <td colSpan={7} className="bg-gray-900 px-4 py-3">
+                      <td colSpan={7} className="bg-base-300 px-4 py-3">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                           <div>
-                            <p className="text-gray-400 font-medium mb-1">Income</p>
+                            <p className="txt-muted font-medium mb-1">Income</p>
                             {s.details.income.map((item, j) => (
-                              <p key={j} className="text-gray-300">{item.source}: ${fmt(item.amount)}/{item.frequency}</p>
+                              <p key={j} className="txt-secondary">{item.source}: ${fmt(item.amount)}/{item.frequency}</p>
                             ))}
-                            {s.details.income.length === 0 && <p className="text-gray-500">None</p>}
+                            {s.details.income.length === 0 && <p className="txt-faint">None</p>}
                           </div>
                           <div>
-                            <p className="text-gray-400 font-medium mb-1">Investments</p>
+                            <p className="txt-muted font-medium mb-1">Investments</p>
                             {s.details.investments.map((item, j) => (
-                              <p key={j} className="text-gray-300">{item.name}: ${fmt(item.currentValue)}</p>
+                              <p key={j} className="txt-secondary">{item.name}: ${fmt(item.currentValue)}</p>
                             ))}
-                            {s.details.investments.length === 0 && <p className="text-gray-500">None</p>}
+                            {s.details.investments.length === 0 && <p className="txt-faint">None</p>}
                           </div>
                           <div>
-                            <p className="text-gray-400 font-medium mb-1">Credit Cards</p>
+                            <p className="txt-muted font-medium mb-1">Credit Cards</p>
                             {s.details.creditCards.map((item, j) => (
-                              <p key={j} className="text-gray-300">{item.name}: ${fmt(item.balance)} / ${fmt(item.limit)}</p>
+                              <p key={j} className="txt-secondary">{item.name}: ${fmt(item.balance)} / ${fmt(item.limit)}</p>
                             ))}
-                            {s.details.creditCards.length === 0 && <p className="text-gray-500">None</p>}
+                            {s.details.creditCards.length === 0 && <p className="txt-faint">None</p>}
                           </div>
                           <div>
-                            <p className="text-gray-400 font-medium mb-1">Loans</p>
+                            <p className="txt-muted font-medium mb-1">Loans</p>
                             {s.details.loans.map((item, j) => (
-                              <p key={j} className="text-gray-300">{item.name}: ${fmt(item.balance)} (${fmt(item.monthlyPayment)}/mo)</p>
+                              <p key={j} className="txt-secondary">{item.name}: ${fmt(item.balance)} (${fmt(item.monthlyPayment)}/mo)</p>
                             ))}
-                            {s.details.loans.length === 0 && <p className="text-gray-500">None</p>}
+                            {s.details.loans.length === 0 && <p className="txt-faint">None</p>}
                           </div>
                           <div>
-                            <p className="text-gray-400 font-medium mb-1">Savings</p>
+                            <p className="txt-muted font-medium mb-1">Savings</p>
                             {s.details.savings.map((item, j) => (
-                              <p key={j} className="text-gray-300">{item.name}: ${fmt(item.currentAmount)} / ${fmt(item.targetAmount)}</p>
+                              <p key={j} className="txt-secondary">{item.name}: ${fmt(item.currentAmount)} / ${fmt(item.targetAmount)}</p>
                             ))}
-                            {s.details.savings.length === 0 && <p className="text-gray-500">None</p>}
+                            {s.details.savings.length === 0 && <p className="txt-faint">None</p>}
                           </div>
                           <div>
-                            <p className="text-gray-400 font-medium mb-1">Bills</p>
+                            <p className="txt-muted font-medium mb-1">Bills</p>
                             {s.details.bills.map((item, j) => (
-                              <p key={j} className="text-gray-300">{item.name}: ${fmt(item.amount)}/{item.frequency}</p>
+                              <p key={j} className="txt-secondary">{item.name}: ${fmt(item.amount)}/{item.frequency}</p>
                             ))}
-                            {s.details.bills.length === 0 && <p className="text-gray-500">None</p>}
+                            {s.details.bills.length === 0 && <p className="txt-faint">None</p>}
                           </div>
                         </div>
                       </td>
@@ -162,7 +162,7 @@ export default function SnapshotsPanel() {
           </tbody>
         </table>
       )}
-      <button onClick={createManual} disabled={creating} className="mt-2 text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1 disabled:text-gray-500">
+      <button onClick={createManual} disabled={creating} className="mt-2 text-accent hover:text-accent-hover text-sm flex items-center gap-1 disabled:txt-faint">
         {creating ? "Creating..." : "📸 Take Snapshot Now"}
       </button>
     </div>

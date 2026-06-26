@@ -45,7 +45,7 @@ export default function SavingsCard({ items, onRefresh }: Props) {
     onRefresh();
   };
 
-  const input = "bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white w-full";
+  const input = "bg-base-100 border border-base-700 rounded px-2 py-1 text-sm txt-primary w-full";
 
   const renderCells = (f: typeof EMPTY_FORM, onChange: (v: typeof EMPTY_FORM) => void) => (
     <>
@@ -62,7 +62,7 @@ export default function SavingsCard({ items, onRefresh }: Props) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-gray-400 text-left border-b border-gray-700">
+          <tr className="txt-muted text-left border-b border-base-500">
             <th className="pb-2 pr-2 font-medium">Name</th>
             <th className="pb-2 pr-2 font-medium">Target</th>
             <th className="pb-2 pr-2 font-medium">Current</th>
@@ -77,48 +77,48 @@ export default function SavingsCard({ items, onRefresh }: Props) {
             const pct = Math.min((item.currentAmount / item.targetAmount) * 100, 100);
             if (editingId === item.id) {
               return (
-                <tr key={item.id} className="border-b border-gray-700">
+                <tr key={item.id} className="border-b border-base-500">
                   {renderCells(form, setForm)}
                   <td className="py-2">
                     <div className="flex gap-1">
-                      <button onClick={save} className="text-green-400 hover:text-green-300 px-1" title="Save">✓</button>
-                      <button onClick={cancel} className="text-gray-400 hover:text-gray-300 px-1" title="Cancel">✕</button>
+                      <button onClick={save} className="text-ok hover:text-ok px-1" title="Save">✓</button>
+                      <button onClick={cancel} className="txt-muted hover:txt-secondary px-1" title="Cancel">✕</button>
                     </div>
                   </td>
                 </tr>
               );
             }
             return (
-              <tr key={item.id} className="border-b border-gray-700/50 hover:bg-gray-750">
-                <td className="py-2 pr-2 text-white">{item.name}</td>
-                <td className="py-2 pr-2 text-gray-300">${item.targetAmount.toFixed(2)}</td>
-                <td className="py-2 pr-2 text-white">${item.currentAmount.toFixed(2)}</td>
+              <tr key={item.id} className="border-b border-base-500/50 hover:bg-base-50">
+                <td className="py-2 pr-2 txt-primary">{item.name}</td>
+                <td className="py-2 pr-2 txt-secondary">${item.targetAmount.toFixed(2)}</td>
+                <td className="py-2 pr-2 txt-primary">${item.currentAmount.toFixed(2)}</td>
                 <td className="py-2 pr-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-16 bg-gray-700 rounded-full h-2">
-                      <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    <div className="w-16 bg-base-100 rounded-full h-2">
+                      <div className="bg-ok h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs text-gray-400">{pct.toFixed(0)}%</span>
+                    <span className="text-xs txt-muted">{pct.toFixed(0)}%</span>
                   </div>
                 </td>
-                <td className="py-2 pr-2 text-gray-300">{item.targetDate || "—"}</td>
-                <td className="py-2 pr-2 text-gray-400">{item.notes || "—"}</td>
+                <td className="py-2 pr-2 txt-secondary">{item.targetDate || "—"}</td>
+                <td className="py-2 pr-2 txt-muted">{item.notes || "—"}</td>
                 <td className="py-2">
                   <div className="flex gap-1">
-                    <button onClick={() => startEdit(item)} className="text-blue-400 hover:text-blue-300 px-1" title="Edit">✎</button>
-                    <button onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-300 px-1" title="Delete">🗑</button>
+                    <button onClick={() => startEdit(item)} className="text-accent hover:text-accent-hover px-1" title="Edit">✎</button>
+                    <button onClick={() => handleDelete(item.id)} className="text-err hover:text-err px-1" title="Delete">🗑</button>
                   </div>
                 </td>
               </tr>
             );
           })}
           {addingNew && (
-            <tr className="border-b border-gray-700">
+            <tr className="border-b border-base-500">
               {renderCells(form, setForm)}
               <td className="py-2">
                 <div className="flex gap-1">
-                  <button onClick={save} className="text-green-400 hover:text-green-300 px-1" title="Save">✓</button>
-                  <button onClick={cancel} className="text-gray-400 hover:text-gray-300 px-1" title="Cancel">✕</button>
+                  <button onClick={save} className="text-ok hover:text-ok px-1" title="Save">✓</button>
+                  <button onClick={cancel} className="txt-muted hover:txt-secondary px-1" title="Cancel">✕</button>
                 </div>
               </td>
             </tr>
@@ -126,9 +126,9 @@ export default function SavingsCard({ items, onRefresh }: Props) {
         </tbody>
       </table>
       {items.length === 0 && !addingNew && (
-        <p className="text-gray-500 text-sm text-center py-4">No savings goals added yet.</p>
+        <p className="txt-faint text-sm text-center py-4">No savings goals added yet.</p>
       )}
-      <button onClick={startAdd} className="mt-2 text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+      <button onClick={startAdd} className="mt-2 text-accent hover:text-accent-hover text-sm flex items-center gap-1">
         + Add Row
       </button>
     </div>

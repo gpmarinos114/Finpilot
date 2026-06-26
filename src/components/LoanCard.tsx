@@ -47,7 +47,7 @@ export default function LoanCard({ items, onRefresh }: Props) {
     onRefresh();
   };
 
-  const input = "bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white w-full";
+  const input = "bg-base-100 border border-base-700 rounded px-2 py-1 text-sm txt-primary w-full";
 
   const renderCells = (f: typeof EMPTY_FORM, onChange: (v: typeof EMPTY_FORM) => void) => (
     <>
@@ -70,7 +70,7 @@ export default function LoanCard({ items, onRefresh }: Props) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-gray-400 text-left border-b border-gray-700">
+          <tr className="txt-muted text-left border-b border-base-500">
             <th className="pb-2 pr-2 font-medium">Name</th>
             <th className="pb-2 pr-2 font-medium">Type</th>
             <th className="pb-2 pr-2 font-medium">Balance</th>
@@ -84,40 +84,40 @@ export default function LoanCard({ items, onRefresh }: Props) {
         <tbody>
           {items.map((item) =>
             editingId === item.id ? (
-              <tr key={item.id} className="border-b border-gray-700">
+              <tr key={item.id} className="border-b border-base-500">
                 {renderCells(form, setForm)}
                 <td className="py-2">
                   <div className="flex gap-1">
-                    <button onClick={save} className="text-green-400 hover:text-green-300 px-1" title="Save">✓</button>
-                    <button onClick={cancel} className="text-gray-400 hover:text-gray-300 px-1" title="Cancel">✕</button>
+                    <button onClick={save} className="text-ok hover:text-ok px-1" title="Save">✓</button>
+                    <button onClick={cancel} className="txt-muted hover:txt-secondary px-1" title="Cancel">✕</button>
                   </div>
                 </td>
               </tr>
             ) : (
-              <tr key={item.id} className="border-b border-gray-700/50 hover:bg-gray-750">
-                <td className="py-2 pr-2 text-white">{item.name}</td>
-                <td className="py-2 pr-2 text-gray-300 uppercase text-xs">{item.type}</td>
-                <td className="py-2 pr-2 text-white">${item.balance.toFixed(2)}</td>
-                <td className="py-2 pr-2 text-gray-300">{item.interestRate}%</td>
-                <td className="py-2 pr-2 text-gray-300">${item.monthlyPayment.toFixed(2)}/mo</td>
-                <td className="py-2 pr-2 text-gray-300">{item.termMonths ? `${item.termMonths} mo` : "—"}</td>
-                <td className="py-2 pr-2 text-gray-400">{item.notes || "—"}</td>
+              <tr key={item.id} className="border-b border-base-500/50 hover:bg-base-50">
+                <td className="py-2 pr-2 txt-primary">{item.name}</td>
+                <td className="py-2 pr-2 txt-secondary uppercase text-xs">{item.type}</td>
+                <td className="py-2 pr-2 txt-primary">${item.balance.toFixed(2)}</td>
+                <td className="py-2 pr-2 txt-secondary">{item.interestRate}%</td>
+                <td className="py-2 pr-2 txt-secondary">${item.monthlyPayment.toFixed(2)}/mo</td>
+                <td className="py-2 pr-2 txt-secondary">{item.termMonths ? `${item.termMonths} mo` : "—"}</td>
+                <td className="py-2 pr-2 txt-muted">{item.notes || "—"}</td>
                 <td className="py-2">
                   <div className="flex gap-1">
-                    <button onClick={() => startEdit(item)} className="text-blue-400 hover:text-blue-300 px-1" title="Edit">✎</button>
-                    <button onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-300 px-1" title="Delete">🗑</button>
+                    <button onClick={() => startEdit(item)} className="text-accent hover:text-accent-hover px-1" title="Edit">✎</button>
+                    <button onClick={() => handleDelete(item.id)} className="text-err hover:text-err px-1" title="Delete">🗑</button>
                   </div>
                 </td>
               </tr>
             )
           )}
           {addingNew && (
-            <tr className="border-b border-gray-700">
+            <tr className="border-b border-base-500">
               {renderCells(form, setForm)}
               <td className="py-2">
                 <div className="flex gap-1">
-                  <button onClick={save} className="text-green-400 hover:text-green-300 px-1" title="Save">✓</button>
-                  <button onClick={cancel} className="text-gray-400 hover:text-gray-300 px-1" title="Cancel">✕</button>
+                  <button onClick={save} className="text-ok hover:text-ok px-1" title="Save">✓</button>
+                  <button onClick={cancel} className="txt-muted hover:txt-secondary px-1" title="Cancel">✕</button>
                 </div>
               </td>
             </tr>
@@ -125,9 +125,9 @@ export default function LoanCard({ items, onRefresh }: Props) {
         </tbody>
       </table>
       {items.length === 0 && !addingNew && (
-        <p className="text-gray-500 text-sm text-center py-4">No loans added yet.</p>
+        <p className="txt-faint text-sm text-center py-4">No loans added yet.</p>
       )}
-      <button onClick={startAdd} className="mt-2 text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+      <button onClick={startAdd} className="mt-2 text-accent hover:text-accent-hover text-sm flex items-center gap-1">
         + Add Row
       </button>
     </div>

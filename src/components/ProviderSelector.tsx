@@ -36,7 +36,7 @@ export default function ProviderSelector({
           const newModels = PROVIDERS[p]?.models || [];
           if (newModels.length > 0) onModelChange(newModels[0].id);
         }}
-        className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+        className="bg-base-100 border border-base-700 rounded px-2 py-1 text-sm txt-primary"
       >
         <option value="deepseek">DeepSeek</option>
         <option value="mimo">MiMo</option>
@@ -45,21 +45,21 @@ export default function ProviderSelector({
       <select
         value={model}
         onChange={(e) => onModelChange(e.target.value)}
-        className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white"
+        className="bg-base-100 border border-base-700 rounded px-2 py-1 text-sm txt-primary"
       >
         {models.map((m) => (
           <option key={m.id} value={m.id}>{m.label}</option>
         ))}
       </select>
-      <div className="flex items-center bg-gray-700 border border-gray-600 rounded overflow-hidden">
+      <div className="flex items-center bg-base-100 border border-base-700 rounded overflow-hidden">
         {EFFORT_OPTIONS.map((o) => (
           <button
             key={o.value}
             onClick={() => onReasoningChange(o.value)}
             className={`px-2 py-1 text-xs transition-colors ${
               reasoningEffort === o.value
-                ? "bg-blue-600 text-white"
-                : "text-gray-400 hover:text-white hover:bg-gray-600"
+                ? "bg-accent txt-primary"
+                : "txt-muted hover:txt-primary hover:bg-base-600"
             }`}
             title={`Reasoning: ${o.label}`}
           >

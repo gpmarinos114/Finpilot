@@ -60,10 +60,10 @@ export default function ResizablePanel({
 
   if (collapsed) {
     return (
-      <div className="flex items-center border-l border-gray-800 bg-gray-900">
+      <div className="flex items-center border-l border-base-300 bg-base-300">
         <button
           onClick={onToggleCollapse}
-          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+          className="p-2 txt-muted hover:txt-primary hover:bg-base-100 rounded"
           title="Expand chat"
         >
           {side === "right" ? "◀" : "▶"}
@@ -79,8 +79,8 @@ export default function ResizablePanel({
       style={{ width }}
     >
       <div
-        className={`absolute top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 transition-colors z-10 ${
-          isDragging ? "bg-blue-500" : "bg-transparent"
+        className={`absolute top-0 bottom-0 w-1 cursor-col-resize hover:bg-accent transition-colors z-10 ${
+          isDragging ? "bg-accent" : "bg-transparent"
         } ${side === "right" ? "left-0" : "right-0"}`}
         onMouseDown={handleMouseDown}
       />
