@@ -41,3 +41,12 @@ Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Prisma/SQLit
 - Run `npx tsc --noEmit` — must pass with no errors in `src/`
 - Run `npx eslint src/` — no new errors (pre-existing warnings are OK)
 - Never commit: `dev.db`, `db-config.json`, `.env*`, `memory/plans/`, `memory/simulations/`
+
+## Debugging Rules
+- **Never assume** what a provider supports or doesn't support — check the actual behavior
+- **Add debug logging** (`console.log("[DEBUG] ...")`) to trace issues before making changes
+- **Read the terminal output** to see what's actually happening, not what you think is happening
+- **Revert first** if a change doesn't fix the issue — don't stack speculative fixes
+- **Test with the actual provider** the user is using before declaring something works
+- When debugging streaming issues, log: chunk count, content length, thinking length, tool calls, finish reason
+- Debug logs use `[DEBUG]` prefix — remove them after the issue is resolved

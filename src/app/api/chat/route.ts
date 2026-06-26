@@ -196,6 +196,10 @@ export async function POST(req: NextRequest) {
 
   const inputTokens = systemTokens + conversationTokens + countTokens(fullMessage) + 20;
 
+  console.log(`[DEBUG] Chat request: provider=${providerName} model=${selectedModel} effort=${effort}`);
+  console.log(`[DEBUG] Context: systemTokens=${systemTokens} conversationTokens=${conversationTokens} maxContext=${maxContext} trimmedMessages=${trimmedMessages.length}`);
+  console.log(`[DEBUG] Message has ${fullMessage.length} chars, ${imageAttachments.length} images`);
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -212,12 +216,19 @@ export async function POST(req: NextRequest) {
         );
 
         let keepLooping = true;
+        let loopIteration = 0;
         while (keepLooping) {
+          loopIteration++;
+          console.log(`[DEBUG] Loop iteration ${loopIteration}, messages count: ${messages.length}`);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let response: any;
           try {
             const controller2 = new AbortController();
-            const timeout = setTimeout(() => controller2.abort(), 120000);
+            const timeout = setTimeout(() => {
+              console.log(`[DEBUG] API call timed out after 120s`);
+              controller2.abort();
+            }, 120000);
+            console.log(`[DEBUG] Calling API: model=${selectedModel}, provider=${providerName}, tools=${FINANCIAL_TOOLS.length}, effort=${effort}`);
             response = await (client.chat.completions.create as any)({
               model: selectedModel,
               messages,
@@ -228,8 +239,9 @@ export async function POST(req: NextRequest) {
               extra_body: { thinking: { type: effort === "low" ? "disabled" : "enabled" } },
             }, { signal: controller2.signal });
             clearTimeout(timeout);
+            console.log(`[DEBUG] API call returned, starting stream iteration`);
           } catch (apiError) {
-            console.error("API call failed:", apiError);
+            console.error(`[DEBUG] API call failed:`, apiError);
             const errMsg = apiError instanceof Error ? apiError.message : "API call failed";
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "content", text: `\n\nError: ${errMsg}` })}\n\n`)
@@ -244,9 +256,21 @@ export async function POST(req: NextRequest) {
             function: { name: string; arguments: string };
           }[] = [];
           let completionTokens = 0;
+          let chunkCount = 0;
 
           try {
             for await (const chunk of response) {
+              chunkCount++;
+              const delta = chunk.choices[0]?.delta;
+              const hasThinking = !!delta?.reasoning_content;
+              const hasContent = !!delta?.content;
+              const hasToolCalls = !!delta?.tool_calls;
+              const isFinish = !!chunk.choices[0]?.finish_reason;
+
+              if (chunkCount <= 5 || chunkCount % 50 === 0 || isFinish || hasToolCalls) {
+                console.log(`[DEBUG] Chunk ${chunkCount}: thinking=${hasThinking} content=${hasContent} tools=${hasToolCalls} finish=${chunk.choices[0]?.finish_reason || "none"} usage=${!!chunk.usage}`);
+              }
+
               if (chunk.usage) {
                 completionTokens = chunk.usage.completion_tokens;
                 controller.enqueue(
@@ -263,9 +287,7 @@ export async function POST(req: NextRequest) {
                 );
               }
 
-              const delta = chunk.choices[0]?.delta;
-
-              if (delta?.reasoning_content) {
+              if (hasThinking) {
                 fullThinking += delta.reasoning_content;
                 controller.enqueue(
                   encoder.encode(
@@ -274,7 +296,7 @@ export async function POST(req: NextRequest) {
                 );
               }
 
-              if (delta?.content) {
+              if (hasContent) {
                 fullContent += delta.content;
                 controller.enqueue(
                   encoder.encode(
@@ -283,7 +305,7 @@ export async function POST(req: NextRequest) {
                 );
               }
 
-              if (delta?.tool_calls) {
+              if (hasToolCalls) {
                 for (const tc of delta.tool_calls) {
                   if (tc.index !== undefined) {
                     if (!toolCalls[tc.index]) {
@@ -302,8 +324,9 @@ export async function POST(req: NextRequest) {
                 }
               }
             }
+            console.log(`[DEBUG] Stream ended. chunks=${chunkCount} contentLen=${fullContent.length} thinkingLen=${fullThinking.length} tools=${toolCalls.length} finish_reason from last chunk`);
           } catch (streamError) {
-            console.error("Stream error:", streamError);
+            console.error(`[DEBUG] Stream error after ${chunkCount} chunks:`, streamError);
             if (fullContent) {
               controller.enqueue(
                 encoder.encode(
@@ -317,8 +340,10 @@ export async function POST(req: NextRequest) {
           }
 
           if (toolCalls.length > 0) {
+            console.log(`[DEBUG] Processing ${toolCalls.length} tool calls`);
             const toolResults = [];
             for (const tc of toolCalls) {
+              console.log(`[DEBUG] Executing tool: ${tc.function.name} with args: ${tc.function.arguments.slice(0, 200)}`);
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({ type: "tool_call", name: tc.function.name, args: tc.function.arguments })}\n\n`
@@ -331,6 +356,7 @@ export async function POST(req: NextRequest) {
               } catch {}
 
               const result = await executeTool(tc.function.name, args);
+              console.log(`[DEBUG] Tool ${tc.function.name} result: ${result.slice(0, 200)}`);
               toolResults.push({
                 tool_call_id: tc.id,
                 output: result,
@@ -432,6 +458,7 @@ Return ONLY valid JSON, nothing else.`,
           }
         }
 
+        console.log(`[DEBUG] While loop ended. Sending done signal.`);
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
         );
@@ -439,6 +466,7 @@ Return ONLY valid JSON, nothing else.`,
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
+        console.error(`[DEBUG] Outer catch triggered:`, errorMessage);
         try {
           controller.enqueue(
             encoder.encode(
