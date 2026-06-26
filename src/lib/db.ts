@@ -33,11 +33,8 @@ function createLocalClient(): PrismaClient {
 
 async function createTursoClient(url: string, token: string): Promise<PrismaClient> {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { createClient } = require("@libsql/client");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { PrismaLibSql } = require("@prisma/adapter-libsql");
-  const libsql = createClient({ url, authToken: token });
-  const adapter = new PrismaLibSql(libsql);
+  const adapter = new PrismaLibSql({ url, authToken: token });
   return new PrismaClient({ adapter });
 }
 
