@@ -35,9 +35,9 @@ async function createTursoClient(url: string, token: string): Promise<PrismaClie
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createClient } = require("@libsql/client");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { PrismaLibSQL } = require("@prisma/adapter-libsql");
+  const { PrismaLibSql } = require("@prisma/adapter-libsql");
   const libsql = createClient({ url, authToken: token });
-  const adapter = new PrismaLibSQL(libsql);
+  const adapter = new PrismaLibSql(libsql);
   return new PrismaClient({ adapter });
 }
 
@@ -62,7 +62,12 @@ async function getPrismaClient(): Promise<PrismaClient> {
 
   let client: PrismaClient;
   if (backend === "turso" && config.tursoUrl && config.tursoToken) {
-    client = await createTursoClient(config.tursoUrl, config.tursoToken);
+    try {
+      client = await createTursoClient(config.tursoUrl, config.tursoToken);
+    } catch (err) {
+      console.error("Turso connection failed, falling back to local SQLite:", err);
+      client = createLocalClient();
+    }
   } else {
     client = createLocalClient();
   }
