@@ -197,9 +197,11 @@ export async function POST(req: NextRequest) {
       { type: "text", text: fullMessage },
     ];
     for (const img of imageAttachments) {
+      console.log(`[DEBUG] Image attachment: ${img.name}, dataUrl length: ${img.dataUrl.length}, starts with: ${img.dataUrl.slice(0, 50)}`);
       content.push({ type: "image_url", image_url: { url: img.dataUrl } });
     }
     messages[messages.length - 1] = { role: "user", content } as never;
+    console.log(`[DEBUG] Multimodal message content parts: ${content.length}`);
   }
 
   const inputTokens = systemTokens + conversationTokens + countTokens(fullMessage) + 20;
@@ -251,6 +253,11 @@ export async function POST(req: NextRequest) {
           } catch (apiError) {
             console.error(`[DEBUG] API call failed:`, apiError);
             const errMsg = apiError instanceof Error ? apiError.message : "API call failed";
+            // Try to extract more detail from the error
+            if (apiError && typeof apiError === 'object' && 'response' in apiError) {
+              const resp = (apiError as { response?: { status?: number; data?: unknown } }).response;
+              console.error(`[DEBUG] API error response status: ${resp?.status}, body:`, resp?.data);
+            }
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "content", text: `\n\nError: ${errMsg}` })}\n\n`)
             );
