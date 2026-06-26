@@ -232,60 +232,74 @@ export async function POST(req: NextRequest) {
           }[] = [];
           let completionTokens = 0;
 
-          for await (const chunk of response) {
-            if (chunk.usage) {
-              completionTokens = chunk.usage.completion_tokens;
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({
-                    type: "usage",
-                    inputTokens: chunk.usage.prompt_tokens,
-                    outputTokens: chunk.usage.completion_tokens,
-                    totalTokens: chunk.usage.total_tokens,
-                    maxContext,
-                    usedPercent: Math.round((chunk.usage.prompt_tokens / maxContext) * 100),
-                  })}\n\n`
-                )
-              );
-            }
+          try {
+            for await (const chunk of response) {
+              if (chunk.usage) {
+                completionTokens = chunk.usage.completion_tokens;
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({
+                      type: "usage",
+                      inputTokens: chunk.usage.prompt_tokens,
+                      outputTokens: chunk.usage.completion_tokens,
+                      totalTokens: chunk.usage.total_tokens,
+                      maxContext,
+                      usedPercent: Math.round((chunk.usage.prompt_tokens / maxContext) * 100),
+                    })}\n\n`
+                  )
+                );
+              }
 
-            const delta = chunk.choices[0]?.delta;
+              const delta = chunk.choices[0]?.delta;
 
-            if (delta?.reasoning_content) {
-              fullThinking += delta.reasoning_content;
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: "thinking", text: delta.reasoning_content })}\n\n`
-                )
-              );
-            }
+              if (delta?.reasoning_content) {
+                fullThinking += delta.reasoning_content;
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ type: "thinking", text: delta.reasoning_content })}\n\n`
+                  )
+                );
+              }
 
-            if (delta?.content) {
-              fullContent += delta.content;
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: "content", text: delta.content })}\n\n`
-                )
-              );
-            }
+              if (delta?.content) {
+                fullContent += delta.content;
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({ type: "content", text: delta.content })}\n\n`
+                  )
+                );
+              }
 
-            if (delta?.tool_calls) {
-              for (const tc of delta.tool_calls) {
-                if (tc.index !== undefined) {
-                  if (!toolCalls[tc.index]) {
-                    toolCalls[tc.index] = {
-                      id: tc.id || "",
-                      function: { name: "", arguments: "" },
-                    };
+              if (delta?.tool_calls) {
+                for (const tc of delta.tool_calls) {
+                  if (tc.index !== undefined) {
+                    if (!toolCalls[tc.index]) {
+                      toolCalls[tc.index] = {
+                        id: tc.id || "",
+                        function: { name: "", arguments: "" },
+                      };
+                    }
+                    if (tc.id) toolCalls[tc.index].id = tc.id;
+                    if (tc.function?.name)
+                      toolCalls[tc.index].function.name = tc.function.name;
+                    if (tc.function?.arguments)
+                      toolCalls[tc.index].function.arguments +=
+                        tc.function.arguments;
                   }
-                  if (tc.id) toolCalls[tc.index].id = tc.id;
-                  if (tc.function?.name)
-                    toolCalls[tc.index].function.name = tc.function.name;
-                  if (tc.function?.arguments)
-                    toolCalls[tc.index].function.arguments +=
-                      tc.function.arguments;
                 }
               }
+            }
+          } catch (streamError) {
+            console.error("Stream error:", streamError);
+            if (fullContent) {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "content", text: "\n\n[Response interrupted]" })}\n\n`
+                )
+              );
+              await prisma.chatMessage.create({
+                data: { role: "assistant", content: fullContent + "\n\n[Response interrupted]", provider: providerName, sessionId: sessionId || null },
+              }).catch(() => {});
             }
           }
 
@@ -390,6 +404,17 @@ Return ONLY valid JSON, nothing else.`,
                   } catch { /* JSON parse failed, skip */ }
                 }
               } catch { /* Learning extraction failed, skip */ }
+            } else if (fullThinking) {
+              // AI produced thinking but no content — send a fallback
+              const fallback = "I was thinking about your message but didn't produce a response. Could you try rephrasing?";
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "content", text: fallback })}\n\n`
+                )
+              );
+              await prisma.chatMessage.create({
+                data: { role: "assistant", content: fallback, provider: providerName, sessionId: sessionId || null },
+              });
             }
           }
         }

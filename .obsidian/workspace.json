@@ -185,6 +185,7 @@
   },
   "active": "48d0cafee27cfbdd",
   "lastOpenFiles": [
+    "api-keys.json",
     "src/generated/prisma/sedkWZYWr",
     "src/generated/prisma/sedfWgXsa",
     "src/generated/prisma/sedUJt5j9",
@@ -195,7 +196,6 @@
     "src/components/SnapshotsPanel.tsx",
     "src/app/api/snapshots/route.ts",
     "src/app/api/snapshots",
-    "src/lib/snapshots.ts",
     "node_modules/@libsql/hrana-client/README.md",
     "node_modules/@libsql/client/README.md",
     "node_modules/@prisma/adapter-libsql/README.md",
