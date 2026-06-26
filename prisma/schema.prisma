@@ -78,13 +78,14 @@ model SavingsGoal {
 }
 
 model ChatMessage {
-  id        String   @id @default(cuid())
-  role      String
-  content   String
-  toolName  String?
-  provider  String?
-  sessionId String?
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  role       String
+  content    String
+  toolName   String?
+  toolCallId String?
+  provider   String?
+  sessionId  String?
+  createdAt  DateTime @default(now())
 }
 
 model ChatSession {

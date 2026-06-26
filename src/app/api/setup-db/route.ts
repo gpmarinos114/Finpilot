@@ -86,11 +86,16 @@ export async function POST() {
         "role" TEXT NOT NULL,
         "content" TEXT NOT NULL,
         "toolName" TEXT,
+        "toolCallId" TEXT,
         "provider" TEXT,
         "sessionId" TEXT,
         "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    // Add toolCallId column if it doesn't exist (for existing databases)
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "ChatMessage" ADD COLUMN "toolCallId" TEXT`);
+    } catch { /* column already exists */ }
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "ChatSession" (
         "id" TEXT NOT NULL PRIMARY KEY,

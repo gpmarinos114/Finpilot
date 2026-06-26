@@ -172,7 +172,12 @@ export async function POST(req: NextRequest) {
   const allMessages: MessageEntry[] = recentMessages.reverse().map((m) => ({
     role: m.role,
     content: m.content,
-  }));
+    tool_call_id: (m as Record<string, unknown>).toolCallId as string | undefined,
+  })).filter((m) => {
+    // Filter out tool result messages without tool_call_id (orphaned from old saves)
+    if (m.role === "tool" && !m.tool_call_id) return false;
+    return true;
+  });
 
   const maxContext = CONTEXT_LIMITS[selectedModel] || 128000;
   const t2 = Date.now();
@@ -356,6 +361,7 @@ export async function POST(req: NextRequest) {
 
           if (toolCalls.length > 0) {
             console.log(`[DEBUG] Processing ${toolCalls.length} tool calls`);
+            console.log(`[DEBUG] Tool call IDs: ${toolCalls.map(tc => tc.id || "(empty)").join(", ")}`);
             const toolResults = [];
             for (const tc of toolCalls) {
               console.log(`[DEBUG] Executing tool: ${tc.function.name} with args: ${tc.function.arguments.slice(0, 200)}`);
@@ -399,12 +405,32 @@ export async function POST(req: NextRequest) {
                 },
               })),
             } as never);
+            // Save tool call assistant message to DB
+            await prisma.chatMessage.create({
+              data: {
+                role: "assistant",
+                content: fullContent || "",
+                toolName: toolCalls.map(tc => tc.function.name).join(","),
+                provider: providerName,
+                sessionId: sessionId || null,
+              },
+            }).catch(() => {});
             for (const tr of toolResults) {
               messages.push({
                 role: "tool" as const,
                 content: tr.output,
                 tool_call_id: tr.tool_call_id,
               } as never);
+              // Save tool result to DB
+              await prisma.chatMessage.create({
+                data: {
+                  role: "tool",
+                  content: tr.output,
+                  toolCallId: tr.tool_call_id,
+                  provider: providerName,
+                  sessionId: sessionId || null,
+                },
+              }).catch(() => {});
             }
           } else {
             keepLooping = false;
