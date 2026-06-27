@@ -224,8 +224,9 @@ export async function executeTool(
 ): Promise<string> {
   const prisma = await getDb();
 
-  switch (name) {
-    case "save_memory": {
+  try {
+    switch (name) {
+      case "save_memory": {
       const { file, section, entry } = args;
       if (section) {
         await appendToMemory(file as string, section as string, entry as string);
@@ -421,5 +422,10 @@ export async function executeTool(
 
     default:
       return `Unknown tool: ${name}`;
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[DEBUG] Tool ${name} error:`, msg);
+    return `Error: ${msg}`;
   }
 }
