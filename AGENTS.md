@@ -50,3 +50,39 @@ Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Prisma/SQLit
 - **Test with the actual provider** the user is using before declaring something works
 - When debugging streaming issues, log: chunk count, content length, thinking length, tool calls, finish reason
 - Debug logs use `[DEBUG]` prefix — remove them after the issue is resolved
+
+## Context Management Roadmap (Hermes-style)
+
+The agent's context management is inspired by Hermes agent architecture. Completed and planned improvements:
+
+### Done
+- [x] **Save thinking to DB** — AI reasoning persisted alongside content, prepended to history on reload
+- [x] **Session persistence** — localStorage + auto-save to DB after each exchange
+- [x] **Orphaned message linking** — first user message linked to session after creation
+
+### TODO — Tool Output Pruning
+- Old tool outputs (e.g., "Created investment X") are verbose but low-value after use
+- After a tool result is consumed by the next AI response, compress it to a one-line summary
+- Keep the tool_call_id but reduce the content size
+
+### TODO — Periodic Memory Nudge
+- After N turns or when context reaches a threshold, send an internal system prompt:
+  "What from recent activity is worth remembering? Save to client-profile.md if useful."
+- This replaces the current end-of-chat extraction (which only runs once and sometimes fails)
+- Inspired by Hermes' periodic nudge mechanism
+
+### TODO — Semantic Compression
+- When context window gets full, summarize old conversation turns into a structured handoff doc
+- Protect head (system prompt + financial data) and tail (recent messages)
+- Summarize the middle band using the LLM
+- Store the summary and use it in place of the raw old messages
+
+### TODO — Tool Output Auto-Prune on Load
+- When loading messages from DB, detect old tool results and compress them
+- e.g., "Created investment: SCHD ($5000) — ID: abc123" → "[Tool: Created investment SCHD]"
+- Reduces context bloat from verbose tool outputs
+
+### TODO — Thinking Compression
+- Old thinking content is large but has diminishing value
+- After a few turns, summarize old thinking to key points only
+- Keep recent thinking intact (last 2-3 turns)
