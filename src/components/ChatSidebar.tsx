@@ -281,9 +281,10 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
         setSessionId(data.session.id);
         setSessionName(data.session.name);
         setMessages(
-          data.messages.map((m: { role: string; content: string; toolName?: string }) => ({
+          data.messages.map((m: { role: string; content: string; thinking?: string; toolName?: string }) => ({
             role: m.role,
             content: m.content,
+            thinking: m.thinking || undefined,
             toolName: m.toolName,
           }))
         );

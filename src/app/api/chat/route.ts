@@ -101,6 +101,7 @@ function countTokens(text: string): number {
 interface MessageEntry {
   role: string;
   content: string;
+  thinking?: string;
   tool_calls?: unknown[];
   tool_call_id?: string;
 }
@@ -172,11 +173,18 @@ export async function POST(req: NextRequest) {
   });
   console.log(`[DEBUG] fetchRecentMessages took ${Date.now() - t1}ms, count: ${recentMessages.length}`);
 
-  const allMessages: MessageEntry[] = recentMessages.reverse().map((m) => ({
-    role: m.role,
-    content: m.content,
-    tool_call_id: (m as Record<string, unknown>).toolCallId as string | undefined,
-  })).filter((m) => {
+  const allMessages: MessageEntry[] = recentMessages.reverse().map((m) => {
+    const thinking = (m as Record<string, unknown>).thinking as string | undefined;
+    const content = m.content;
+    // Prepend thinking to content so the AI can see its prior reasoning
+    const fullContent = thinking ? `[Previous thinking: ${thinking}]\n\n${content}` : content;
+    return {
+      role: m.role,
+      content: fullContent,
+      thinking: thinking || undefined,
+      tool_call_id: (m as Record<string, unknown>).toolCallId as string | undefined,
+    };
+  }).filter((m) => {
     // Filter out tool result messages without tool_call_id (orphaned from old saves)
     if (m.role === "tool" && !m.tool_call_id) return false;
     return true;
@@ -413,6 +421,7 @@ export async function POST(req: NextRequest) {
               data: {
                 role: "assistant",
                 content: fullContent || "",
+                thinking: fullThinking || null,
                 toolName: toolCalls.map(tc => tc.function.name).join(","),
                 provider: providerName,
                 sessionId: sessionId || null,
@@ -442,6 +451,7 @@ export async function POST(req: NextRequest) {
                 data: {
                   role: "assistant",
                   content: fullContent,
+                  thinking: fullThinking || null,
                   provider: providerName,
                   sessionId: sessionId || null,
                 },
@@ -496,7 +506,7 @@ Return ONLY valid JSON, nothing else.`,
                 )
               );
               await prisma.chatMessage.create({
-                data: { role: "assistant", content: fallback, provider: providerName, sessionId: sessionId || null },
+                data: { role: "assistant", content: fallback, thinking: fullThinking || null, provider: providerName, sessionId: sessionId || null },
               });
             }
           }

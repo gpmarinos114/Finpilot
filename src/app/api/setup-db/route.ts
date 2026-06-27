@@ -96,6 +96,10 @@ export async function POST() {
     try {
       await prisma.$executeRawUnsafe(`ALTER TABLE "ChatMessage" ADD COLUMN "toolCallId" TEXT`);
     } catch { /* column already exists */ }
+    // Add thinking column if it doesn't exist
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "ChatMessage" ADD COLUMN "thinking" TEXT`);
+    } catch { /* column already exists */ }
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "ChatSession" (
         "id" TEXT NOT NULL PRIMARY KEY,

@@ -81,6 +81,7 @@ model ChatMessage {
   id         String   @id @default(cuid())
   role       String
   content    String
+  thinking   String?
   toolName   String?
   toolCallId String?
   provider   String?
