@@ -452,6 +452,12 @@ export default function ChatSidebar({ provider, model, onCollapse }: Props) {
           const session = await res.json();
           setSessionId(session.id);
           setSessionName(session.name);
+          // Link orphaned messages (sessionId=null) to the new session
+          fetch("/api/sessions/link-orphaned", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: session.id }),
+          }).catch(() => {});
         }
       }
     } catch (error) {
